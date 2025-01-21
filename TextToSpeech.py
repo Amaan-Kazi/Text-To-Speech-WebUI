@@ -50,11 +50,15 @@ def generateAudio(text: str, speaker: int, speed: float, audioDevice: str, playb
     mixer.init(audioDevice)
     currentAudioDevice = audioDevice
 
-  if playback:
+  if playback and currentAudioDevice != None:
     mixer.music.load(f"outputs/tts/tts{index}.wav")
     mixer.music.play()
 
   return f"outputs/tts/tts{index}.wav", ""
+
+def playSound(file: str):
+  mixer.music.load(f"soundboard/{file}")
+  mixer.music.play()
 
 
 # Using Gradio Blocks to recreate the interface
@@ -72,6 +76,10 @@ with gr.Blocks() as webUI:
         audio_device_input   = gr.Dropdown(audioDevices, label="Output Device", value=defaultAudioDevice)
         playback_input       = gr.Checkbox(label="Playback to device immediately", value=True)
       # Add models dropdown and accordingly speakers dropdown
+
+      with gr.Group():
+        sound_input = gr.Dropdown(os.listdir("soundboard"), label="Soundboard")
+        play_sound_input = gr.Button(value="Play Sound")
             
       with gr.Row():
         with gr.Column(): clear_button = gr.ClearButton(value="Clear", variant="secondary")
@@ -83,6 +91,7 @@ with gr.Blocks() as webUI:
 
       flag_button = gr.Button("Flag")
 
+  play_sound_input.click(fn=playSound, inputs=[sound_input])
   clear_button.add([text_input, audio_output])
   generate_button.click(fn=generateAudio, inputs=[text_input, speaker_input, speed_input, audio_device_input, playback_input], outputs=[audio_output, text_input])
   text_input.submit(fn=generateAudio,     inputs=[text_input, speaker_input, speed_input, audio_device_input, playback_input], outputs=[audio_output, text_input])
